@@ -33,7 +33,10 @@ pub fn cast_rays(
                         Some(intersection) if matches!(collider_index, Some(_collider_index)) => {
                             let collider_index = collider_index.unwrap();
                             // Update existing colliding entity with new collided position
-                            if intersection.1 != ray.collisions[collider_index].1 {
+                            let error_margin = 0.1;
+                            if (intersection.1 - ray.collisions[collider_index].1).abs()
+                                > error_margin
+                            {
                                 ray.collisions.remove(collider_index);
                                 ray.collisions.push((collider_id, intersection.1));
                             }
