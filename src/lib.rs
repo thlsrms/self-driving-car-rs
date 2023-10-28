@@ -10,6 +10,13 @@ use std::f32::consts::PI;
 
 const FIXED_DELTA: f32 = 1.0 / 60.0;
 
+#[derive(States, Debug, Clone, Copy, Default, Eq, PartialEq, Hash)]
+enum AppState {
+    #[default]
+    Running,
+    LoadingNetwork,
+}
+
 pub struct SelfDrivingCar;
 
 impl Plugin for SelfDrivingCar {
@@ -20,14 +27,27 @@ impl Plugin for SelfDrivingCar {
             ..Default::default()
         };
         let network_config = NetworkConfig {
-            input_neuron_count: 9,
-            input_ray_length: 180.0,
-            input_ray_spread: PI * 0.66,
-            mutate_factor: 0.5,
-            hidden_layers: 1,
-            hidden_layers_neuron_count: 6,
+            input_neuron_count: 18,
+            input_ray_length: 130.0,
+            input_ray_spread: PI * 0.9,
+            mutate_factor: 0.075,
+            hidden_layers: 2,
+            hidden_layers_neuron_count: 9,
             output_neuron_count: 4,
         };
+
+        app.insert_resource(FixedTime::new_from_secs(FIXED_DELTA))
+            .insert_resource(initial_config)
+            .insert_resource(network_config)
+            .insert_resource(CameraTarget::default())
+            .init_resource::<State<AppState>>();
+
+        app.register_type::<components::NetworkLevel>()
+            .register_type::<Vec<components::NetworkLevel>>()
+            .register_type::<Vec<f32>>()
+            .register_type::<Vec<Vec<f32>>>();
+
+        app.add_event::<LoadNetworkEvent>();
 
         app.add_systems(
             Startup,
@@ -47,7 +67,8 @@ impl Plugin for SelfDrivingCar {
                 (systems::car::update_camera_target).in_set(CollisionSystemSet),
                 systems::ui::save_handler,
                 systems::ui::load_handler,
-            ),
+            )
+                .run_if(state_exists_and_equals(AppState::Running)),
         );
         app.add_systems(
             FixedUpdate,
@@ -64,18 +85,14 @@ impl Plugin for SelfDrivingCar {
                 (systems::ray_cast::cast_rays).in_set(CollisionSystemSet),
                 systems::network::update,
             )
-                .chain(),
-        )
-        .insert_resource(FixedTime::new_from_secs(FIXED_DELTA))
-        .insert_resource(initial_config)
-        .insert_resource(network_config)
-        .register_type::<components::NetworkLevel>()
-        .register_type::<Vec<components::NetworkLevel>>()
-        .register_type::<Vec<f32>>()
-        .register_type::<Vec<Vec<f32>>>()
-        .insert_resource(CameraTarget::default());
+                .chain()
+                .run_if(state_exists_and_equals(AppState::Running)),
+        );
     }
 }
 
 #[derive(SystemSet, Debug, Hash, Clone, PartialEq, Eq)]
 struct CollisionSystemSet;
+
+#[derive(Event)]
+pub struct LoadNetworkEvent;
