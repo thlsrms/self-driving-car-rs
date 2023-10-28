@@ -19,6 +19,8 @@ pub struct Controls {
 #[derive(Component)]
 pub struct CarsArray;
 #[derive(Component)]
+pub struct TrafficArray;
+#[derive(Component)]
 pub struct CameraFollowMarker;
 #[derive(Component)]
 pub struct NewCameraTarget;

@@ -1,6 +1,6 @@
 use crate::components::{
     CameraFollowMarker, Car, CarCollided, CarsArray, ControllableCarBundle, Controls,
-    NeuralNetwork, NewCameraTarget, RayBundle, TrafficCarBundle,
+    NeuralNetwork, NewCameraTarget, RayBundle, TrafficArray, TrafficCarBundle,
 };
 use crate::query_filters;
 use crate::resources::{CameraTarget, Config, NetworkConfig, RoadProperties, WindowSize};
@@ -60,7 +60,13 @@ pub fn setup(
                     network_config.mutate_factor,
                 ));
             });
+        });
 
+    commands
+        .spawn_empty()
+        .insert(SpatialBundle::default())
+        .insert(TrafficArray)
+        .with_children(|parent| {
             // Initial traffic - spawn one third of the max traffic
             (0..config.max_traffic / 3).for_each(|i| {
                 let random_lane: u8 = rand::thread_rng().gen_range(0..road.lane_count);
@@ -254,7 +260,7 @@ pub fn despawn_traffic(
 
 pub fn spawn_traffic(
     mut commands: Commands,
-    cars_array_q: Query<Entity, With<CarsArray>>,
+    traffic_array_q: Query<Entity, With<TrafficArray>>,
     camera_q: Query<&Transform, With<Camera2d>>,
     window_size: Res<WindowSize>,
     road: Res<RoadProperties>,
@@ -262,7 +268,7 @@ pub fn spawn_traffic(
 ) {
     let camera_xform = camera_q.single();
     let min_y = camera_xform.translation.y + window_size.1;
-    let cars_array = cars_array_q.single();
+    let traffic_array = traffic_array_q.single();
 
     (0..options.max_traffic - options.current_traffic).for_each(|i| {
         let random_lane: u8 = rand::thread_rng().gen_range(0..road.lane_count);
@@ -273,7 +279,7 @@ pub fn spawn_traffic(
                 random_y,
             ))
             .id();
-        commands.entity(cars_array).add_child(new_car);
+        commands.entity(traffic_array).add_child(new_car);
         options.current_traffic += 1;
     });
 }
