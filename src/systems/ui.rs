@@ -52,7 +52,7 @@ pub fn save_handler(
         return;
     };
 
-    for (interaction, mut border_color) in interaction_q.iter_mut() {
+    for (interaction, mut border_color) in &mut interaction_q {
         match interaction {
             Interaction::Pressed => {
                 border_color.0 = Color::YELLOW_GREEN;
@@ -64,7 +64,7 @@ pub fn save_handler(
                     ron::ser::PrettyConfig::default(),
                 )
                 .unwrap();
-                std::fs::write("brain", brain_serialized).unwrap()
+                std::fs::write("brain", brain_serialized).unwrap();
                 // TODO: Add date and timestamp to the file name
                 // save into a file inside the path assets/brain/TIMESTAMP
                 // and maybe rename the last file to old_TIMESTAMP
@@ -83,7 +83,7 @@ pub fn load_handler(
     mut interaction_q: Query<(&Interaction, &mut BorderColor), query_filters::LoadButton>,
     type_registry: Res<AppTypeRegistry>,
 ) {
-    for (interaction, mut border_color) in interaction_q.iter_mut() {
+    for (interaction, mut border_color) in &mut interaction_q {
         match interaction {
             Interaction::Pressed => {
                 border_color.0 = Color::YELLOW_GREEN;

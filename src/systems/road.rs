@@ -46,7 +46,7 @@ pub fn setup(world: &mut World) {
             let dash_y_count = (window_size.1 as u16 * 2) / dash_size as u16;
             let lane_width = road.width / (f32::from(road.lane_count));
 
-            for i in 0..road.lane_count + 1 {
+            (0..=road.lane_count).for_each(|i| {
                 for j in 0..dash_y_count {
                     let y = if i == 0 || i == road.lane_count || j % 2 == 0 {
                         ((f32::from(j) * dash_size) - window_size.1) + dash_size / 2.
@@ -87,7 +87,7 @@ pub fn setup(world: &mut World) {
                         road_line.insert(StaticCollider::default());
                     }
                 }
-            }
+            });
         });
 
     world.insert_resource(window_size);
@@ -120,7 +120,7 @@ pub fn move_road(
         camera_xform.translation.y + window_size.1,
     );
 
-    for mut dash_xform in dashes_q.iter_mut() {
+    for mut dash_xform in &mut dashes_q {
         if (y_position_constraints.0..=y_position_constraints.1).contains(&dash_xform.translation.y)
         {
             continue;

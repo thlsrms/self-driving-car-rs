@@ -118,7 +118,7 @@ pub fn check_collisions(
     colliders_q: Query<(&Transform, &Sprite), query_filters::Collider>,
     mut camera_target: ResMut<CameraTarget>,
 ) {
-    for (car_xform, car_children, mut car_sprite, car_id) in cars_q.iter_mut() {
+    for (car_xform, car_children, mut car_sprite, car_id) in &mut cars_q {
         for (collider_xform, collider_sprite) in colliders_q.iter() {
             if car_xform.translation.distance(collider_xform.translation)
                 >= car_sprite.custom_size.unwrap().y
@@ -138,7 +138,7 @@ pub fn check_collisions(
                     car_entity.remove_children(car_children);
                     car_entity.insert(CarCollided);
                     car_entity.remove::<CameraFollowMarker>();
-                    for child in car_children.iter() {
+                    for child in car_children {
                         commands.entity(*child).despawn();
                     }
                     car_sprite.color.set_a(50.);
@@ -206,7 +206,7 @@ pub fn update_camera_target(
                     commands.entity(other_entity).remove::<CameraFollowMarker>();
                     other_sprite.color = Color::GREEN;
                     other_sprite.color.set_a(0.05);
-                    for child in other_children.iter() {
+                    for child in other_children {
                         commands.entity(*child).insert(Visibility::Hidden);
                     }
                 }
@@ -221,7 +221,7 @@ pub fn update_camera_target(
             commands.entity(new_target).insert(CameraFollowMarker);
             target_sprite.color = Color::YELLOW_GREEN;
             target_sprite.color.set_a(1.);
-            for child in target_children.iter() {
+            for child in target_children {
                 commands.entity(*child).insert(Visibility::Visible);
             }
             camera_target.cleanup();

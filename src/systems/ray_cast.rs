@@ -8,15 +8,13 @@ pub fn cast_rays(
     mut colliders_q: Query<(&Transform, &Sprite, Entity, &mut StaticCollider)>,
 ) {
     for (car_xform, car_children) in cars_q.iter() {
-        for &child in car_children.iter() {
-            let (mut ray, ray_id) = if let Ok(v) = rays_q.get_mut(child) {
-                v
-            } else {
+        for &child in car_children {
+            let Ok((mut ray, ray_id)) = rays_q.get_mut(child) else {
                 continue;
             };
 
             for (collider_xform, collider_sprite, collider_id, mut static_collider) in
-                colliders_q.iter_mut()
+                &mut colliders_q
             {
                 // No reason to check if the collider is too far from the ray
                 if car_xform.translation.distance(collider_xform.translation) >= ray.length * 1.5 {
@@ -62,8 +60,8 @@ pub fn cast_rays(
     }
 }
 
-    for (mut ray_sprite, ray, visibility) in rays_q.iter_mut() {
 pub fn update_sprites(mut rays_q: Query<(&mut Sprite, &Ray, &Visibility), Changed<Ray>>) {
+    for (mut ray_sprite, ray, visibility) in &mut rays_q {
         if ray.collisions.is_empty() {
             ray_sprite.color = Color::BLUE;
             ray_sprite.custom_size = Some(Vec2 {

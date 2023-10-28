@@ -7,7 +7,7 @@ pub fn update(
     mut controls_q: Query<(&mut Controls, &mut NeuralNetwork, Entity), Without<CarCollided>>,
     rays_q: Query<&Ray>,
 ) {
-    'control_loop: for (mut controls, mut brain, entity) in controls_q.iter_mut() {
+    'control_loop: for (mut controls, mut brain, entity) in &mut controls_q {
         let mut input_offsets: Vec<f32> = vec![];
         for (idx, ray) in brain.input_rays.iter().enumerate() {
             if let Ok(r) = rays_q.get(*ray) {
