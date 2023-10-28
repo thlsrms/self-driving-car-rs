@@ -43,13 +43,13 @@ pub fn setup(world: &mut World) {
 
             // lanes
             let dash_size = 40.;
-            let dash_y_count = ((window_size.1 * 2.) / dash_size) as i32;
-            let lane_width = road.width / (road.lane_count as f32);
+            let dash_y_count = (window_size.1 as u16 * 2) / dash_size as u16;
+            let lane_width = road.width / (f32::from(road.lane_count));
 
             for i in 0..road.lane_count + 1 {
                 for j in 0..dash_y_count {
                     let y = if i == 0 || i == road.lane_count || j % 2 == 0 {
-                        ((j as f32 * dash_size) - window_size.1) + dash_size / 2.
+                        ((f32::from(j) * dash_size) - window_size.1) + dash_size / 2.
                     } else {
                         continue;
                     };
@@ -72,7 +72,7 @@ pub fn setup(world: &mut World) {
                             transform: Transform {
                                 translation: Vec3 {
                                     //x: -road.width / (road.lane_count as f32) * i as f32,
-                                    x: lane_width * i as f32 - road.width / 2.,
+                                    x: lane_width * f32::from(i) - road.width / 2.,
                                     y,
                                     z: -9.,
                                 },

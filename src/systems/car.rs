@@ -34,7 +34,7 @@ pub fn setup(
                             let t = if network_config.input_neuron_count == 1 {
                                 0.5
                             } else {
-                                i as f32 / (network_config.input_neuron_count - 1) as f32
+                                f32::from(i) / f32::from(network_config.input_neuron_count - 1)
                             };
                             let a = network_config.input_ray_spread / 2.;
                             lerp::<f32, f32>(a, -a, t)
@@ -65,7 +65,7 @@ pub fn setup(
             (0..config.max_traffic / 3).for_each(|i| {
                 let random_lane: u8 = rand::thread_rng().gen_range(0..road.lane_count);
                 let random_y: f32 =
-                    rand::thread_rng().gen_range(0f32..=(i as f32 * 100f32)) + 100f32;
+                    rand::thread_rng().gen_range(0f32..=(f32::from(i) * 100f32)) + 100f32;
                 parent.spawn(TrafficCarBundle::new(
                     road.get_lane_ceter(random_lane),
                     random_y,
@@ -266,7 +266,7 @@ pub fn spawn_traffic(
 
     (0..options.max_traffic - options.current_traffic).for_each(|i| {
         let random_lane: u8 = rand::thread_rng().gen_range(0..road.lane_count);
-        let random_y: f32 = rand::thread_rng().gen_range(0f32..=(i as f32 * 100f32)) + min_y;
+        let random_y: f32 = rand::thread_rng().gen_range(0f32..=(f32::from(i) * 100f32)) + min_y;
         let new_car = commands
             .spawn(TrafficCarBundle::new(
                 road.get_lane_ceter(random_lane),

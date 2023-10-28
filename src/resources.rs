@@ -32,7 +32,7 @@ impl RoadProperties {
     pub fn get_lane_ceter(self, lane_idx: u8) -> f32 {
         let lane_width = self.width / f32::from(self.lane_count);
         //(lane_width * lane_idx as f32 - self.width) + lane_width / 2.
-        (lane_width * lane_idx as f32) - self.width / 2. + lane_width / 2.
+        (lane_width * f32::from(lane_idx)) - self.width / 2. + lane_width / 2.
     }
 }
 
