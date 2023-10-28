@@ -2,9 +2,9 @@ use crate::components::{
     CameraFollowMarker, Car, CarCollided, CarsArray, ControllableCarBundle, Controls,
     NeuralNetwork, NewCameraTarget, RayBundle, TrafficArray, TrafficCarBundle,
 };
-use crate::query_filters;
 use crate::resources::{CameraTarget, Config, NetworkConfig, RoadProperties, WindowSize};
 use crate::utils::lerp;
+use crate::{query_filters, AppState, LoadNetworkEvent};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb;
 use rand::Rng;
@@ -190,6 +190,7 @@ pub fn find_new_camera_target(
     }
 }
 
+// TODO: Use Event instead of resource to change the camera target
 pub fn update_camera_target(
     mut commands: Commands,
     mut camera_target_candidate_q: Query<(&mut Sprite, &Children), query_filters::CameraTransition>,
@@ -278,4 +279,76 @@ pub fn spawn_traffic(
         commands.entity(traffic_array).add_child(new_car);
         options.current_traffic += 1;
     });
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn load_network(
+    mut commands: Commands,
+    network_levels_q: Query<(Entity, &NeuralNetwork), Without<Controls>>,
+    cars_array_q: Query<(Entity, &Children), With<CarsArray>>,
+    window_size: Res<WindowSize>,
+    road: Res<RoadProperties>,
+    config: Res<Config>,
+    mut network_config: ResMut<NetworkConfig>,
+    mut camera_target: ResMut<CameraTarget>,
+    mut ev_load_network: EventReader<LoadNetworkEvent>,
+) {
+    for _ in &mut ev_load_network {
+        let (placeholder_id, network) = network_levels_q.single();
+        // Update network_config to match the loaded network
+        network_config.input_neuron_count = network.levels[0].inputs.len() as u8;
+        network_config.hidden_layers = network.levels.len() as u8;
+        network_config.hidden_layers_neuron_count = network.levels[0].outputs.len() as u8;
+        network_config.output_neuron_count =
+            network.levels[network.levels.len() - 1].outputs.len() as u8;
+
+        // Despawn all controllabled cars
+        let (cars_array_id, children) = cars_array_q.single();
+        let mut cars_array = commands.entity(cars_array_id);
+        cars_array.remove_children(children);
+        for child in children {
+            commands.entity(*child).despawn_recursive();
+        }
+        camera_target.cleanup();
+        camera_target.remove_target();
+
+        // Respawn cars with new network
+        commands.entity(cars_array_id).with_children(|parent| {
+            (0..config.controlllable_cars).for_each(|_| {
+                let mut ray_ids: Vec<Entity> = vec![];
+                let mut car = parent.spawn(ControllableCarBundle::new(Vec2 {
+                    x: road.get_lane_ceter(2),
+                    y: -window_size.1 / 4.,
+                }));
+                car.with_children(|parent| {
+                    (0..network_config.input_neuron_count).for_each(|i| {
+                        let ray_angle = {
+                            let t = if network_config.input_neuron_count == 1 {
+                                0.5
+                            } else {
+                                f32::from(i) / f32::from(network_config.input_neuron_count - 1)
+                            };
+                            let a = network_config.input_ray_spread / 2.;
+                            lerp::<f32, f32>(a, -a, t)
+                        };
+                        ray_ids.push(
+                            parent
+                                .spawn(RayBundle::new(network_config.input_ray_length, ray_angle))
+                                .remove::<Visibility>()
+                                .id(),
+                        );
+                    });
+                });
+
+                car.insert(NeuralNetwork::with_levels(
+                    network.levels.to_vec(),
+                    ray_ids,
+                    network_config.mutate_factor,
+                ));
+            });
+        });
+
+        commands.entity(placeholder_id).despawn();
+        commands.insert_resource(State::new(AppState::Running));
+    }
 }

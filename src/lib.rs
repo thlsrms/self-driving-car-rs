@@ -71,6 +71,10 @@ impl Plugin for SelfDrivingCar {
                 .run_if(state_exists_and_equals(AppState::Running)),
         );
         app.add_systems(
+            Update,
+            (systems::car::load_network).run_if(state_exists_and_equals(AppState::LoadingNetwork)),
+        );
+        app.add_systems(
             FixedUpdate,
             (
                 systems::car::move_cars,

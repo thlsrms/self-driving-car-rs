@@ -1,7 +1,7 @@
 use crate::components::{
     CameraFollowMarker, CarCollided, LoadButton, NetworkLevel, NeuralNetwork, SaveButton,
 };
-use crate::query_filters;
+use crate::{query_filters, AppState, LoadNetworkEvent};
 use bevy::prelude::*;
 use bevy::reflect::erased_serde::__private::serde::de::DeserializeSeed;
 use bevy::reflect::serde::{TypedReflectDeserializer, TypedReflectSerializer};
@@ -59,7 +59,6 @@ pub fn save_handler(
             Interaction::Pressed => {
                 border_color.0 = Color::YELLOW_GREEN;
                 // Serialize the "brain"
-                // FIXME: Aparently only one level is being serialized
                 let type_registry = type_registry.read();
                 let brain_serialized = ron::ser::to_string_pretty(
                     &TypedReflectSerializer::new(&brain.levels, &type_registry),
@@ -82,8 +81,10 @@ pub fn save_handler(
 }
 
 pub fn load_handler(
+    mut commands: Commands,
     mut interaction_q: Query<(&Interaction, &mut BorderColor), query_filters::LoadButton>,
     type_registry: Res<AppTypeRegistry>,
+    mut ev_load_network: EventWriter<LoadNetworkEvent>,
 ) {
     for (interaction, mut border_color) in &mut interaction_q {
         match interaction {
@@ -115,10 +116,13 @@ pub fn load_handler(
                     dbg!("Failed to reconstruct brain from reflection");
                     return;
                 };
-                dbg!(brain);
-                // TODO: "Reset" the app, update the NetworkConfig with the loaded brain
-                // remove all entities inside the CarsArray and respawn the cars with the
-                // loaded brain to the neural network
+                // Spawn a placeholder entity with the network to be loaded
+                commands.spawn_empty().insert(NeuralNetwork {
+                    levels: brain,
+                    input_rays: Vec::new(),
+                });
+                commands.insert_resource(State::new(AppState::LoadingNetwork));
+                ev_load_network.send(LoadNetworkEvent);
             }
             Interaction::Hovered => {
                 border_color.0 = Color::CYAN;
