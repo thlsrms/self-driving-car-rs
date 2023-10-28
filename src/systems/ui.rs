@@ -46,11 +46,10 @@ pub fn save_handler(
     brain_q: Query<Option<&NeuralNetwork>, (With<CameraFollowMarker>, Without<CarCollided>)>,
     type_registry: Res<AppTypeRegistry>,
 ) {
-    // FIXME: Need a better filter for the brain query, it should never match Multiple Entities
     if brain_q.is_empty() {
         return;
     }
-    let Some(brain) = brain_q.single() else {
+    let Some(brain) = brain_q.iter().next().and_then(|b| b) else {
         return;
     };
 

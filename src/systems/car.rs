@@ -4,7 +4,7 @@ use crate::components::{
 };
 use crate::resources::{CameraTarget, Config, NetworkConfig, RoadProperties, WindowSize};
 use crate::utils::lerp;
-use crate::{query_filters, AppState, LoadNetworkEvent};
+use crate::{query_filters, AppState, ChangeTargetEvent, LoadNetworkEvent};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb;
 use rand::Rng;
@@ -118,7 +118,6 @@ pub fn check_collisions(
     mut commands: Commands,
     mut cars_q: Query<(&Transform, &Children, &mut Sprite, Entity), query_filters::ControllableCar>,
     colliders_q: Query<(&Transform, &Sprite), query_filters::Collider>,
-    mut camera_target: ResMut<CameraTarget>,
 ) {
     for (car_xform, car_children, mut car_sprite, car_id) in &mut cars_q {
         for (collider_xform, collider_sprite) in colliders_q.iter() {
@@ -145,10 +144,6 @@ pub fn check_collisions(
                     }
                     car_sprite.color.set_a(50.);
                     car_sprite.color = Color::DARK_GRAY;
-                    if Some(car_id) == camera_target.get_curr_target() {
-                        camera_target.cleanup();
-                        camera_target.remove_target();
-                    }
                 }
             }
         }
@@ -156,22 +151,25 @@ pub fn check_collisions(
 }
 
 pub fn find_new_camera_target(
-    mut commands: Commands,
     cars_q: Query<(&Transform, Entity, &Children), query_filters::ControllableCar>,
     mut camera_target: ResMut<CameraTarget>,
+    mut ev_change_target: EventWriter<ChangeTargetEvent>,
 ) {
-    let mut furthermost_y_car: Option<Entity> = camera_target.get_curr_target();
+    let mut furthermost_y_car: Option<Entity> = camera_target.get_target();
     let mut furthermost_y_value: f32 = match furthermost_y_car {
-        Some(car_id) => cars_q.get(car_id).unwrap().0.translation.y,
+        Some(car_id) => {
+            if let Ok((x_form, _, _)) = cars_q.get(car_id) {
+                x_form.translation.y
+            } else {
+                -1000.0
+            }
+        }
         None => -1000.0,
     };
     for (car_xform, car_id, _) in cars_q.iter() {
-        if furthermost_y_car.is_none() && camera_target.get_old_target().is_none() {
+        if furthermost_y_car.is_none() {
             // There's no target, make the first available as the new target
-            commands.entity(car_id).insert(NewCameraTarget);
-            camera_target.set_curr_target(car_id);
-            // set_curr_target twice to push a value as the old_target
-            camera_target.set_curr_target(car_id);
+            ev_change_target.send(ChangeTargetEvent(car_id, None));
             return;
         }
         if car_xform.translation.y > furthermost_y_value {
@@ -180,54 +178,53 @@ pub fn find_new_camera_target(
         }
     }
 
-    if let Some(curr_target) = camera_target.get_curr_target() {
+    if let Some(curr_target) = camera_target.get_target() {
         if furthermost_y_car.unwrap() != curr_target {
-            camera_target.set_curr_target(furthermost_y_car.unwrap());
-            commands
-                .entity(furthermost_y_car.unwrap())
-                .insert(NewCameraTarget);
+            ev_change_target.send(ChangeTargetEvent(
+                furthermost_y_car.unwrap(),
+                Some(curr_target),
+            ));
         }
+    } else {
+        camera_target.remove_target();
     }
 }
 
-// TODO: Use Event instead of resource to change the camera target
 pub fn update_camera_target(
     mut commands: Commands,
-    mut camera_target_candidate_q: Query<(&mut Sprite, &Children), query_filters::CameraTransition>,
-    mut other_targets_q: Query<(&mut Sprite, &Children, Entity), With<CameraFollowMarker>>,
+    mut cars_q: Query<(&mut Sprite, &Children), query_filters::ControllableCar>,
     mut camera_target: ResMut<CameraTarget>,
+    mut ev_change_target: EventReader<ChangeTargetEvent>,
 ) {
-    if let Some(new_target) = camera_target.get_curr_target() {
-        if let Some(old_target) = camera_target.get_old_target() {
-            'disable_old_target: {
-                if new_target != old_target {
-                    let Ok((mut other_sprite, other_children, other_entity)) =
-                        other_targets_q.get_mut(old_target)
+    // Handle only the first event received
+    if let Some(change_target) = ev_change_target.iter().next() {
+        if let Some(prev_target) = change_target.1 {
+            'disable_prev_target: {
+                if change_target.0 != prev_target {
+                    let Ok((mut prev_target_sprite, prev_target_children)) =
+                        cars_q.get_mut(prev_target)
                     else {
-                        break 'disable_old_target;
+                        break 'disable_prev_target;
                     };
-                    commands.entity(other_entity).remove::<CameraFollowMarker>();
-                    other_sprite.color = Color::GREEN;
-                    other_sprite.color.set_a(0.05);
-                    for child in other_children {
+                    commands.entity(prev_target).remove::<CameraFollowMarker>();
+                    prev_target_sprite.color = Color::GREEN;
+                    prev_target_sprite.color.set_a(0.05);
+                    for child in prev_target_children {
                         commands.entity(*child).insert(Visibility::Hidden);
                     }
                 }
             }
-
-            let Ok((mut target_sprite, target_children)) =
-                camera_target_candidate_q.get_mut(new_target)
-            else {
-                return;
-            };
-            commands.entity(new_target).remove::<NewCameraTarget>();
-            commands.entity(new_target).insert(CameraFollowMarker);
-            target_sprite.color = Color::YELLOW_GREEN;
-            target_sprite.color.set_a(1.);
-            for child in target_children {
-                commands.entity(*child).insert(Visibility::Visible);
-            }
-            camera_target.cleanup();
+        }
+        let Ok((mut target_sprite, target_children)) = cars_q.get_mut(change_target.0) else {
+            return;
+        };
+        commands.entity(change_target.0).remove::<NewCameraTarget>();
+        camera_target.set_target(change_target.0);
+        commands.entity(change_target.0).insert(CameraFollowMarker);
+        target_sprite.color = Color::YELLOW_GREEN;
+        target_sprite.color.set_a(1.);
+        for child in target_children {
+            commands.entity(*child).insert(Visibility::Visible);
         }
     }
 }
@@ -290,7 +287,6 @@ pub fn load_network(
     road: Res<RoadProperties>,
     config: Res<Config>,
     mut network_config: ResMut<NetworkConfig>,
-    mut camera_target: ResMut<CameraTarget>,
     mut ev_load_network: EventReader<LoadNetworkEvent>,
 ) {
     for _ in &mut ev_load_network {
@@ -309,8 +305,6 @@ pub fn load_network(
         for child in children {
             commands.entity(*child).despawn_recursive();
         }
-        camera_target.cleanup();
-        camera_target.remove_target();
 
         // Respawn cars with new network
         commands.entity(cars_array_id).with_children(|parent| {

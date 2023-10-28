@@ -103,11 +103,11 @@ pub fn move_road(
 ) {
     let mut pavement_xform = pavement_q.single_mut();
     let mut camera_xform = camera_q.single_mut();
-    if car_q.is_empty() || camera_target.get_curr_target().is_none() {
+    if car_q.is_empty() || camera_target.get_target().is_none() {
         return;
     }
     // We can unwrap() here since we would return if camera_target was None
-    let Ok(Some(car_xform)) = car_q.get(camera_target.get_curr_target().unwrap()) else {
+    let Ok(Some(car_xform)) = car_q.get(camera_target.get_target().unwrap()) else {
         return;
     };
     camera_xform.translation.y = car_xform.translation.y + window_size.1 / 4.;

@@ -6,10 +6,6 @@ pub(super) type ControllableCar = (
     With<components::Controls>,
     Without<components::CarCollided>,
 );
-pub(super) type CameraTransition = (
-    With<components::NewCameraTarget>,
-    Without<components::CameraFollowMarker>,
-);
 pub(super) type Collider = (
     With<components::StaticCollider>,
     Without<components::Controls>,

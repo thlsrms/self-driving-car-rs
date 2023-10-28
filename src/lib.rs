@@ -1,12 +1,15 @@
 mod components;
+mod events;
 mod query_filters;
 mod resources;
 mod systems;
 mod utils;
 use bevy::prelude::*;
-pub use resources::WindowSize;
+use events::{ChangeTargetEvent, LoadNetworkEvent};
 use resources::{CameraTarget, Config, NetworkConfig};
 use std::f32::consts::PI;
+
+pub use resources::WindowSize;
 
 const FIXED_DELTA: f32 = 1.0 / 60.0;
 
@@ -47,7 +50,8 @@ impl Plugin for SelfDrivingCar {
             .register_type::<Vec<f32>>()
             .register_type::<Vec<Vec<f32>>>();
 
-        app.add_event::<LoadNetworkEvent>();
+        app.add_event::<LoadNetworkEvent>()
+            .add_event::<ChangeTargetEvent>();
 
         app.add_systems(
             Startup,
@@ -97,6 +101,3 @@ impl Plugin for SelfDrivingCar {
 
 #[derive(SystemSet, Debug, Hash, Clone, PartialEq, Eq)]
 struct CollisionSystemSet;
-
-#[derive(Event)]
-pub struct LoadNetworkEvent;

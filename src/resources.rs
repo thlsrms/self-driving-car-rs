@@ -38,24 +38,15 @@ impl RoadProperties {
 
 /// Stores the entity information necessary for the camera transition
 #[derive(Resource, Default, Debug)]
-pub struct CameraTarget(Option<Entity>, Option<Entity>);
+pub struct CameraTarget(Option<Entity>);
 
 impl CameraTarget {
-    pub fn set_curr_target(&mut self, new_target: Entity) {
-        self.1 = self.0;
+    pub fn set_target(&mut self, new_target: Entity) {
         self.0 = Some(new_target);
     }
 
-    pub fn get_curr_target(&self) -> Option<Entity> {
+    pub fn get_target(&self) -> Option<Entity> {
         self.0
-    }
-
-    pub fn get_old_target(&self) -> Option<Entity> {
-        self.1
-    }
-
-    pub fn cleanup(&mut self) {
-        self.1 = None;
     }
 
     pub fn remove_target(&mut self) {
