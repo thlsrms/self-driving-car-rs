@@ -1,6 +1,9 @@
-use crate::components::*;
+use crate::components::{
+    CameraFollowMarker, Car, CarCollided, CarsArray, ControllableCarBundle, Controls,
+    NeuralNetwork, NewCameraTarget, RayBundle, TrafficCarBundle,
+};
 use crate::query_filters;
-use crate::resources::*;
+use crate::resources::{CameraTarget, Config, NetworkConfig, RoadProperties, WindowSize};
 use crate::utils::lerp;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb;

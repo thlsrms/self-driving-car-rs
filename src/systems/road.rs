@@ -1,4 +1,4 @@
-use crate::components::*;
+use crate::components::{Pavement, Road, RoadLine, StaticCollider};
 use crate::query_filters;
 use crate::resources::{CameraTarget, RoadProperties, WindowSize};
 use bevy::prelude::*;

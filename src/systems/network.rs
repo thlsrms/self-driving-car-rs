@@ -1,5 +1,5 @@
-use crate::components::{Ray, *};
-use bevy::prelude::*;
+use crate::components::{CarCollided, Controls, NeuralNetwork, Ray};
+use bevy::prelude::{Commands, Entity, Query, Without};
 
 /// For each network, use the children rays offset values as initial input for the controls
 pub fn update(

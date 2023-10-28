@@ -1,6 +1,6 @@
-use crate::components::{Ray, *};
+use crate::components::{Ray, StaticCollider};
 use crate::query_filters;
-use bevy::prelude::*;
+use bevy::prelude::{Changed, Children, Color, Entity, Query, Sprite, Transform, Vec2, Visibility};
 
 pub fn cast_rays(
     cars_q: Query<(&Transform, &Children), query_filters::ControllableCar>,
