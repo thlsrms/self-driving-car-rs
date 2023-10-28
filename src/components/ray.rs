@@ -16,13 +16,13 @@ impl Ray {
         &self,
         car_xform: &Transform,
         target_pos: &Vec3,
-        target_size: &Vec2,
+        target_size: Vec2,
     ) -> Option<(Vec2, f32)> {
         let rs = car_xform.translation;
         let re = car_xform.translation
             + ((Quat::from_rotation_z(self.angle) * car_xform.rotation) * Vec3::Y) * self.length;
-        let t_min = target_pos.truncate() - *target_size / 2.0;
-        let t_max = target_pos.truncate() + *target_size / 2.0;
+        let t_min = target_pos.truncate() - target_size / 2.0;
+        let t_max = target_pos.truncate() + target_size / 2.0;
         let target_segments: [(Vec2, Vec2); 4] = [
             (
                 t_min,

@@ -26,7 +26,7 @@ pub fn cast_rays(
                     match ray.get_intersecting_point(
                         car_xform,
                         &collider_xform.translation,
-                        &collider_size,
+                        collider_size,
                     ) {
                         // If let guard could be useful in here
                         // they are still experimental: rust-lang/rust/issues/51114
