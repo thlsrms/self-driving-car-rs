@@ -35,7 +35,8 @@ pub struct ControllableCarBundle {
 }
 
 impl ControllableCarBundle {
-    pub fn new(car_max_speed: f32, position: Vec2) -> Self {
+    pub fn new(position: Vec2) -> Self {
+        let car_max_speed = 150.0;
         Self {
             car: Car::new(car_max_speed),
             controls: Controls::default(),

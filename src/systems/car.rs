@@ -24,13 +24,10 @@ pub fn setup(
         .with_children(|parent| {
             (0..config.controlllable_cars).for_each(|_| {
                 let mut ray_ids: Vec<Entity> = vec![];
-                let mut car = parent.spawn(ControllableCarBundle::new(
-                    150.0,
-                    Vec2 {
-                        x: road.get_lane_ceter(2),
-                        y: -window_size.1 / 4.,
-                    },
-                ));
+                let mut car = parent.spawn(ControllableCarBundle::new(Vec2 {
+                    x: road.get_lane_ceter(2),
+                    y: -window_size.1 / 4.,
+                }));
                 car.with_children(|parent| {
                     (0..network_config.input_neuron_count).for_each(|i| {
                         let ray_angle = {
