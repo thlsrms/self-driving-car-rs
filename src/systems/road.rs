@@ -107,10 +107,8 @@ pub fn move_road(
         return;
     }
     // We can unwrap() here since we would return if camera_target was None
-    let car_xform = match car_q.get(camera_target.get_curr_target().unwrap()) {
-        Ok(Some(car_xform)) => car_xform,
-        Ok(None) => return,
-        Err(_) => return,
+    let Ok(Some(car_xform)) = car_q.get(camera_target.get_curr_target().unwrap()) else {
+        return;
     };
     camera_xform.translation.y = car_xform.translation.y + window_size.1 / 4.;
     pavement_xform.translation.y = camera_xform.translation.y;
