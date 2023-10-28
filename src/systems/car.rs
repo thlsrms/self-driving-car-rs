@@ -100,7 +100,7 @@ pub fn move_cars(
         };
         car.speed = car.speed.clamp(-car.max_speed * 0.5, car.max_speed);
 
-        if car.speed != 0. && car.speed.abs() > car.acceleration * 3. {
+        if car.speed != 0. && car.speed.abs() > car.acceleration * 1.5 {
             car.handling =
                 f32::to_radians(car.max_handling / (car.speed / 100.)).clamp(-PI * 0.66, PI * 0.66);
             if let Some(control) = car_controls {
