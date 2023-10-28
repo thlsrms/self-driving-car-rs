@@ -1,12 +1,7 @@
-mod car_systems;
 mod components;
-mod keyboard_input;
-mod network_systems;
 mod query_filters;
-mod ray_cast_systems;
 mod resources;
-mod road_systems;
-mod ui_systems;
+mod systems;
 mod utils;
 use bevy::prelude::*;
 pub use resources::WindowSize;
@@ -36,33 +31,38 @@ impl Plugin for SelfDrivingCar {
 
         app.add_systems(
             Startup,
-            (ui_systems::setup, road_systems::setup, car_systems::setup).chain(),
+            (
+                systems::ui::setup,
+                systems::road::setup,
+                systems::car::setup,
+            )
+                .chain(),
         );
         // Uncomment the next line to enable keyboard input
         //app.add_systems(PreUpdate, keyboard_input::read_input);
         app.add_systems(
             Update,
             (
-                ray_cast_systems::update_sprites,
-                (car_systems::update_camera_target).in_set(CollisionSystemSet),
-                ui_systems::save_handler,
-                ui_systems::load_handler,
+                systems::ray_cast::update_sprites,
+                (systems::car::update_camera_target).in_set(CollisionSystemSet),
+                systems::ui::save_handler,
+                systems::ui::load_handler,
             ),
         );
         app.add_systems(
             FixedUpdate,
             (
-                car_systems::move_cars,
-                (car_systems::find_new_camera_target).before(CollisionSystemSet),
-                car_systems::despawn_traffic,
-                car_systems::spawn_traffic,
+                systems::car::move_cars,
+                (systems::car::find_new_camera_target).before(CollisionSystemSet),
+                systems::car::despawn_traffic,
+                systems::car::spawn_traffic,
                 (
-                    (car_systems::check_collisions).in_set(CollisionSystemSet),
-                    road_systems::move_road,
+                    (systems::car::check_collisions).in_set(CollisionSystemSet),
+                    systems::road::move_road,
                 )
                     .chain(),
-                (ray_cast_systems::cast_rays).in_set(CollisionSystemSet),
-                network_systems::update,
+                (systems::ray_cast::cast_rays).in_set(CollisionSystemSet),
+                systems::network::update,
             )
                 .chain(),
         )

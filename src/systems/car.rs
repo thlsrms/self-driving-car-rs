@@ -7,7 +7,7 @@ use bevy::sprite::collide_aabb;
 use rand::Rng;
 use std::f32::consts::PI;
 
-pub(super) fn setup(
+pub fn setup(
     mut commands: Commands,
     window_size: Res<WindowSize>,
     road: Res<RoadProperties>,
@@ -77,7 +77,7 @@ pub(super) fn setup(
     commands.spawn(Camera2dBundle::default());
 }
 
-pub(super) fn move_cars(
+pub fn move_cars(
     mut car_q: Query<(&mut Car, &mut Transform, Option<&Controls>), Without<CarCollided>>,
     time: Res<FixedTime>,
 ) {
@@ -112,7 +112,7 @@ pub(super) fn move_cars(
     });
 }
 
-pub(super) fn check_collisions(
+pub fn check_collisions(
     mut commands: Commands,
     mut cars_q: Query<(&Transform, &Children, &mut Sprite, Entity), query_filters::ControllableCar>,
     colliders_q: Query<(&Transform, &Sprite), query_filters::Collider>,
@@ -153,7 +153,7 @@ pub(super) fn check_collisions(
     }
 }
 
-pub(super) fn find_new_camera_target(
+pub fn find_new_camera_target(
     mut commands: Commands,
     cars_q: Query<(&Transform, Entity, &Children), query_filters::ControllableCar>,
     mut camera_target: ResMut<CameraTarget>,
@@ -188,7 +188,7 @@ pub(super) fn find_new_camera_target(
     }
 }
 
-pub(super) fn update_camera_target(
+pub fn update_camera_target(
     mut commands: Commands,
     mut camera_target_candidate_q: Query<(&mut Sprite, &Children), query_filters::CameraTransition>,
     mut other_targets_q: Query<(&mut Sprite, &Children, Entity), With<CameraFollowMarker>>,
@@ -229,7 +229,7 @@ pub(super) fn update_camera_target(
     }
 }
 
-pub(super) fn despawn_traffic(
+pub fn despawn_traffic(
     mut commands: Commands,
     camera_q: Query<&Transform, With<Camera2d>>,
     traffic_q: Query<(Entity, &Transform), query_filters::Traffic>,
@@ -252,7 +252,7 @@ pub(super) fn despawn_traffic(
     }
 }
 
-pub(super) fn spawn_traffic(
+pub fn spawn_traffic(
     mut commands: Commands,
     cars_array_q: Query<Entity, With<CarsArray>>,
     camera_q: Query<&Transform, With<Camera2d>>,

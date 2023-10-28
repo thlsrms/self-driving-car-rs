@@ -3,7 +3,7 @@ use crate::query_filters;
 use crate::resources::{CameraTarget, RoadProperties, WindowSize};
 use bevy::prelude::*;
 
-pub(super) fn setup(world: &mut World) {
+pub fn setup(world: &mut World) {
     let window_size = world.remove_resource::<WindowSize>().unwrap();
     let road = RoadProperties {
         lane_count: 6,
@@ -93,7 +93,7 @@ pub(super) fn setup(world: &mut World) {
     world.insert_resource(window_size);
 }
 
-pub(super) fn move_road(
+pub fn move_road(
     mut dashes_q: Query<&mut Transform, With<RoadLine>>,
     mut camera_q: Query<&mut Transform, (With<Camera2d>, Without<RoadLine>)>,
     mut pavement_q: Query<&mut Transform, query_filters::Pavement>,

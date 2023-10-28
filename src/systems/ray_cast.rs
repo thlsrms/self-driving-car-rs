@@ -2,7 +2,7 @@ use crate::components::{Ray, *};
 use crate::query_filters;
 use bevy::prelude::*;
 
-pub(super) fn cast_rays(
+pub fn cast_rays(
     cars_q: Query<(&Transform, &Children), query_filters::ControllableCar>,
     mut rays_q: Query<(&mut Ray, Entity)>,
     mut colliders_q: Query<(&Transform, &Sprite, Entity, &mut StaticCollider)>,
@@ -62,8 +62,8 @@ pub(super) fn cast_rays(
     }
 }
 
-pub(super) fn update_sprites(mut rays_q: Query<(&mut Sprite, &Ray, &Visibility), Changed<Ray>>) {
     for (mut ray_sprite, ray, visibility) in rays_q.iter_mut() {
+pub fn update_sprites(mut rays_q: Query<(&mut Sprite, &Ray, &Visibility), Changed<Ray>>) {
         if ray.collisions.is_empty() {
             ray_sprite.color = Color::BLUE;
             ray_sprite.custom_size = Some(Vec2 {

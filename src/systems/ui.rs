@@ -5,7 +5,7 @@ use bevy::reflect::erased_serde::__private::serde::de::DeserializeSeed;
 use bevy::reflect::serde::{TypedReflectDeserializer, TypedReflectSerializer};
 use bevy::reflect::TypeRegistration;
 
-pub(super) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     let font: Handle<Font> = asset_server.load("fonts/FiraMono-Medium.ttf");
 
     commands
@@ -39,7 +39,7 @@ pub(super) fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         });
 }
 
-pub(super) fn save_handler(
+pub fn save_handler(
     mut interaction_q: Query<(&Interaction, &mut BorderColor), query_filters::SaveButton>,
     brain_q: Query<Option<&NeuralNetwork>, (With<CameraFollowMarker>, Without<CarCollided>)>,
     type_registry: Res<AppTypeRegistry>,
@@ -79,7 +79,7 @@ pub(super) fn save_handler(
     }
 }
 
-pub(super) fn load_handler(
+pub fn load_handler(
     mut interaction_q: Query<(&Interaction, &mut BorderColor), query_filters::LoadButton>,
     type_registry: Res<AppTypeRegistry>,
 ) {

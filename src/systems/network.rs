@@ -2,7 +2,7 @@ use crate::components::{Ray, *};
 use bevy::prelude::*;
 
 /// For each network, use the children rays offset values as initial input for the controls
-pub(super) fn update(
+pub fn update(
     mut commands: Commands,
     mut controls_q: Query<(&mut Controls, &mut NeuralNetwork, Entity), Without<CarCollided>>,
     rays_q: Query<&Ray>,
