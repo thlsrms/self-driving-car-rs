@@ -49,16 +49,12 @@ pub fn setup(
                 });
                 let mut network_layers: Vec<u8> = Vec::new();
                 network_layers.insert(0, network_config.input_neuron_count);
-                (1..usize::from(network_config.hidden_layers)).for_each(|idx| {
-                    network_layers.insert(idx, network_config.hidden_layers_neuron_count);
+                (1..network_config.hidden_layers).for_each(|idx| {
+                    network_layers.insert(idx.into(), network_config.hidden_layers_neuron_count);
                 });
                 network_layers.push(network_config.output_neuron_count);
 
-                car.insert(NeuralNetwork::new(
-                    &network_layers,
-                    ray_ids,
-                    network_config.mutate_factor,
-                ));
+                car.insert(NeuralNetwork::new(&network_layers, ray_ids));
             });
         });
 

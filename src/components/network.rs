@@ -9,12 +9,8 @@ pub struct NeuralNetwork {
 }
 
 impl NeuralNetwork {
-    pub fn new(
-        neuron_count_per_level: &Vec<u8>,
-        input_rays: Vec<Entity>,
-        mutate_factor: f32,
-    ) -> Self {
-        let mut network = NeuralNetwork {
+    pub fn new(neuron_count_per_level: &Vec<u8>, input_rays: Vec<Entity>) -> Self {
+        let mut network = Self {
             levels: Vec::new(),
             input_rays,
         };
@@ -24,6 +20,15 @@ impl NeuralNetwork {
                 neuron_count_per_level[i + 1],
             ));
         });
+        network
+    }
+
+    pub fn with_levels(
+        levels: Vec<NetworkLevel>,
+        input_rays: Vec<Entity>,
+        mutate_factor: f32,
+    ) -> Self {
+        let mut network = Self { levels, input_rays };
         network.mutate(mutate_factor);
         network
     }
@@ -37,29 +42,38 @@ impl NeuralNetwork {
         outputs
     }
 
-    #[allow(unused)]
     fn mutate(&mut self, amount: f32) {
         self.levels.iter_mut().for_each(|level| {
-            let _ = level.biases.iter_mut().map(|bias| {
-                let random: f32 = rand::thread_rng().gen_range(-1.0..1.);
-                *bias = lerp::<f32, f32>(*bias, random, amount);
-            });
-            level.weights.iter_mut().for_each(|weight_vec| {
-                let _ = weight_vec.iter_mut().map(|weight| {
+            let _ = level
+                .biases
+                .iter_mut()
+                .map(|bias| {
                     let random: f32 = rand::thread_rng().gen_range(-1.0..1.);
-                    *weight = lerp::<f32, f32>(*weight, random, amount);
-                });
+                    *bias = lerp::<f32, f32>(*bias, random, amount);
+                    *bias
+                })
+                .collect::<Vec<f32>>();
+
+            level.weights.iter_mut().for_each(|weight_vec| {
+                *weight_vec = weight_vec
+                    .iter_mut()
+                    .map(|weight| {
+                        let random: f32 = rand::thread_rng().gen_range(-1.0..1.);
+                        *weight = lerp::<f32, f32>(*weight, random, amount);
+                        *weight
+                    })
+                    .collect::<Vec<f32>>();
             });
         });
     }
 }
 
-#[derive(Reflect, Debug)]
+#[derive(Reflect, Debug, Clone)]
 pub struct NetworkLevel {
-    inputs: Vec<f32>,
-    weights: Vec<Vec<f32>>,
-    outputs: Vec<f32>,
-    biases: Vec<f32>,
+    pub inputs: Vec<f32>,
+    pub weights: Vec<Vec<f32>>,
+    pub outputs: Vec<f32>,
+    pub biases: Vec<f32>,
 }
 
 impl NetworkLevel {
@@ -81,6 +95,10 @@ impl NetworkLevel {
             (0..self.outputs.len()).for_each(|o| {
                 self.weights[i][o] = rand::thread_rng().gen_range(-1.0..1.);
             });
+        });
+
+        (0..self.biases.len()).for_each(|i| {
+            self.biases[i] = rand::thread_rng().gen_range(-1.0..1.);
         });
     }
 
