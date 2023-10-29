@@ -1,6 +1,6 @@
 use crate::components::{
     CameraFollowMarker, Car, CarCollided, CarsArray, ControllableCarBundle, Controls,
-    NeuralNetwork, NewCameraTarget, RayBundle, TrafficArray, TrafficCarBundle,
+    NeuralNetwork, RayBundle, TrafficArray, TrafficCarBundle,
 };
 use crate::resources::{CameraTarget, Config, NetworkConfig, RoadProperties, WindowSize};
 use crate::utils::lerp;
@@ -218,7 +218,6 @@ pub fn update_camera_target(
         let Ok((mut target_sprite, target_children)) = cars_q.get_mut(change_target.0) else {
             return;
         };
-        commands.entity(change_target.0).remove::<NewCameraTarget>();
         camera_target.set_target(change_target.0);
         commands.entity(change_target.0).insert(CameraFollowMarker);
         target_sprite.color = Color::YELLOW_GREEN;

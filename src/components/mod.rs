@@ -23,8 +23,6 @@ pub struct TrafficArray;
 #[derive(Component)]
 pub struct CameraFollowMarker;
 #[derive(Component)]
-pub struct NewCameraTarget;
-#[derive(Component)]
 pub struct CarCollided;
 
 /* Road components    */
