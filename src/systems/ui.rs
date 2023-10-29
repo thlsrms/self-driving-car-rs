@@ -115,13 +115,8 @@ pub fn load_handler(
                     dbg!("Failed to reconstruct brain from reflection");
                     return;
                 };
-                // Spawn a placeholder entity with the network to be loaded
-                commands.spawn_empty().insert(NeuralNetwork {
-                    levels: brain,
-                    input_rays: Vec::new(),
-                });
                 commands.insert_resource(State::new(AppState::LoadingNetwork));
-                ev_load_network.send(LoadNetworkEvent);
+                ev_load_network.send(LoadNetworkEvent(brain));
             }
             Interaction::Hovered => {
                 border_color.0 = Color::CYAN;

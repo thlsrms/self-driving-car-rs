@@ -280,7 +280,6 @@ pub fn spawn_traffic(
 #[allow(clippy::too_many_arguments)]
 pub fn load_network(
     mut commands: Commands,
-    network_levels_q: Query<(Entity, &NeuralNetwork), Without<Controls>>,
     cars_array_q: Query<(Entity, &Children), With<CarsArray>>,
     window_size: Res<WindowSize>,
     road: Res<RoadProperties>,
@@ -288,60 +287,60 @@ pub fn load_network(
     mut network_config: ResMut<NetworkConfig>,
     mut ev_load_network: EventReader<LoadNetworkEvent>,
 ) {
-    for _ in &mut ev_load_network {
-        let (placeholder_id, network) = network_levels_q.single();
-        // Update network_config to match the loaded network
-        network_config.input_neuron_count = network.levels[0].inputs.len() as u8;
-        network_config.hidden_layers = network.levels.len() as u8;
-        network_config.hidden_layers_neuron_count = network.levels[0].outputs.len() as u8;
-        network_config.output_neuron_count =
-            network.levels[network.levels.len() - 1].outputs.len() as u8;
-
-        // Despawn all controllabled cars
-        let (cars_array_id, children) = cars_array_q.single();
-        let mut cars_array = commands.entity(cars_array_id);
-        cars_array.remove_children(children);
-        for child in children {
-            commands.entity(*child).despawn_recursive();
-        }
-
-        // Respawn cars with new network
-        commands.entity(cars_array_id).with_children(|parent| {
-            (0..config.controlllable_cars).for_each(|_| {
-                let mut ray_ids: Vec<Entity> = vec![];
-                let mut car = parent.spawn(ControllableCarBundle::new(Vec2 {
-                    x: road.get_lane_ceter(2),
-                    y: -window_size.1 / 4.,
-                }));
-                car.with_children(|parent| {
-                    (0..network_config.input_neuron_count).for_each(|i| {
-                        let ray_angle = {
-                            let t = if network_config.input_neuron_count == 1 {
-                                0.5
-                            } else {
-                                f32::from(i) / f32::from(network_config.input_neuron_count - 1)
-                            };
-                            let a = network_config.input_ray_spread / 2.;
-                            lerp::<f32, f32>(a, -a, t)
-                        };
-                        ray_ids.push(
-                            parent
-                                .spawn(RayBundle::new(network_config.input_ray_length, ray_angle))
-                                .remove::<Visibility>()
-                                .id(),
-                        );
-                    });
-                });
-
-                car.insert(NeuralNetwork::with_levels(
-                    network.levels.to_vec(),
-                    ray_ids,
-                    network_config.mutate_factor,
-                ));
-            });
-        });
-
-        commands.entity(placeholder_id).despawn();
+    let Some(network_levels) = ev_load_network.iter().next().map(|n| &n.0) else {
         commands.insert_resource(State::new(AppState::Running));
+        return;
+    };
+    // Update network_config to match the loaded network
+    network_config.input_neuron_count = network_levels[0].inputs.len() as u8;
+    network_config.hidden_layers = network_levels.len() as u8;
+    network_config.hidden_layers_neuron_count = network_levels[0].outputs.len() as u8;
+    network_config.output_neuron_count =
+        network_levels[network_levels.len() - 1].outputs.len() as u8;
+
+    // Despawn all controllabled cars
+    let (cars_array_id, children) = cars_array_q.single();
+    let mut cars_array = commands.entity(cars_array_id);
+    cars_array.remove_children(children);
+    for child in children {
+        commands.entity(*child).despawn_recursive();
     }
+
+    // Respawn cars with new network
+    commands.entity(cars_array_id).with_children(|parent| {
+        (0..config.controlllable_cars).for_each(|_| {
+            let mut ray_ids: Vec<Entity> = vec![];
+            let mut car = parent.spawn(ControllableCarBundle::new(Vec2 {
+                x: road.get_lane_ceter(2),
+                y: -window_size.1 / 4.,
+            }));
+            car.with_children(|parent| {
+                (0..network_config.input_neuron_count).for_each(|i| {
+                    let ray_angle = {
+                        let t = if network_config.input_neuron_count == 1 {
+                            0.5
+                        } else {
+                            f32::from(i) / f32::from(network_config.input_neuron_count - 1)
+                        };
+                        let a = network_config.input_ray_spread / 2.;
+                        lerp::<f32, f32>(a, -a, t)
+                    };
+                    ray_ids.push(
+                        parent
+                            .spawn(RayBundle::new(network_config.input_ray_length, ray_angle))
+                            .remove::<Visibility>()
+                            .id(),
+                    );
+                });
+            });
+
+            car.insert(NeuralNetwork::with_levels(
+                network_levels.to_vec(),
+                ray_ids,
+                network_config.mutate_factor,
+            ));
+        });
+    });
+
+    commands.insert_resource(State::new(AppState::Running));
 }
